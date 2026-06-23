@@ -1,0 +1,839 @@
+pip install -r requirements.txt<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini CRM - Lead Management System</title>
+  <!-- Tailwind CSS v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Tailwind Configuration for custom brand colors -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+  <!-- ==================== TOAST NOTIFICATION CONTAINER ==================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-brand-900 to-indigo-950 p-4">
+    <div class="w-full max-w-md bg-white/95 rounded-2xl shadow-2xl p-8 border border-white/10 glass-card fade-in">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-600 text-white text-2xl shadow-lg mb-3">
+          <i class="fa-solid fa-users-gear"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Mini CRM Dashboard</h1>
+        <p class="text-slate-500 mt-1 text-sm">Please log in to manage client leads</p>
+      </div>
+
+      <form id="login-form" class="space-y-5">
+        <div>
+          <label for="login-email" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Admin Email</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <i class="fa-regular fa-envelope"></i>
+            </span>
+            <input type="email" id="login-email" required class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-slate-800 text-sm transition-all" placeholder="admin@crm.com">
+          </div>
+        </div>
+
+        <div>
+          <label for="login-password" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <i class="fa-solid fa-lock"></i>
+            </span>
+            <input type="password" id="login-password" required class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-slate-800 text-sm transition-all" placeholder="••••••••">
+            <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+              <i class="fa-regular fa-eye" id="password-eye-icon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" id="login-btn" class="w-full py-3 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-medium rounded-xl shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 flex items-center justify-center gap-2 transition-all">
+            <span>Access CRM</span>
+            <div id="login-spinner" class="loader-spinner !w-4 !h-4 !border-white !border-t-transparent hidden"></div>
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6 text-center text-xs text-slate-400 border-t border-slate-100 pt-4">
+        Default: admin@crm.com / admin123
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <div id="app-workspace" class="min-h-screen flex flex-col md:flex-row hidden">
+    
+    <!-- SIDEBAR (DESKTOP) -->
+    <aside class="hidden md:flex flex-col w-64 bg-slate-900 text-slate-400 shrink-0 border-r border-slate-800">
+      <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center text-sm shadow-md">
+            <i class="fa-solid fa-users-gear"></i>
+          </div>
+          <span class="text-white font-bold tracking-tight text-lg">Mini CRM</span>
+        </div>
+      </div>
+      
+      <nav class="flex-1 px-4 py-6 space-y-1.5">
+        <a href="#dashboard" data-tab="dashboard" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white transition-all text-sm font-medium active">
+          <i class="fa-solid fa-chart-pie w-5 text-center text-lg"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#leads" data-tab="leads" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white transition-all text-sm font-medium">
+          <i class="fa-solid fa-address-book w-5 text-center text-lg"></i>
+          <span>Leads Manager</span>
+        </a>
+        <a href="#analytics" data-tab="analytics" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white transition-all text-sm font-medium">
+          <i class="fa-solid fa-chart-line w-5 text-center text-lg"></i>
+          <span>Analytics Reports</span>
+        </a>
+        <a href="#settings" data-tab="settings" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white transition-all text-sm font-medium">
+          <i class="fa-solid fa-sliders w-5 text-center text-lg"></i>
+          <span>Form Integration</span>
+        </a>
+      </nav>
+      
+      <div class="p-4 border-t border-slate-800 bg-slate-950">
+        <div class="flex items-center gap-3 mb-4 px-2">
+          <div class="w-8 h-8 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold text-xs uppercase" id="avatar-letters">
+            AD
+          </div>
+          <div class="overflow-hidden">
+            <p class="text-xs text-white font-medium truncate" id="admin-user-email">admin@crm.com</p>
+            <p class="text-[10px] text-slate-500 font-semibold tracking-wide uppercase">Administrator</p>
+          </div>
+        </div>
+        <button id="logout-btn" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-red-950/30 hover:text-red-400 text-slate-300 font-medium rounded-xl flex items-center justify-center gap-2 border border-slate-700/50 transition-all text-sm">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MOBILE NAVBAR -->
+    <header class="md:hidden bg-slate-900 text-white h-16 px-4 flex items-center justify-between border-b border-slate-800 z-10 shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded bg-brand-600 text-white flex items-center justify-center text-xs">
+          <i class="fa-solid fa-users-gear"></i>
+        </div>
+        <span class="font-bold tracking-tight text-md">Mini CRM</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="mobile-menu-btn" class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-lg text-slate-300">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- MOBILE MENU DROPDOWN -->
+    <div id="mobile-menu" class="hidden md:hidden bg-slate-900 border-b border-slate-800 px-4 py-4 flex flex-col gap-2 shrink-0">
+      <a href="#dashboard" data-tab="dashboard" class="mobile-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium">
+        <i class="fa-solid fa-chart-pie text-lg w-6"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="#leads" data-tab="leads" class="mobile-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium">
+        <i class="fa-solid fa-address-book text-lg w-6"></i>
+        <span>Leads Manager</span>
+      </a>
+      <a href="#analytics" data-tab="analytics" class="mobile-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium">
+        <i class="fa-solid fa-chart-line text-lg w-6"></i>
+        <span>Analytics Reports</span>
+      </a>
+      <a href="#settings" data-tab="settings" class="mobile-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium">
+        <i class="fa-solid fa-sliders text-lg w-6"></i>
+        <span>Form Integration</span>
+      </a>
+      <hr class="border-slate-800 my-2">
+      <button id="mobile-logout-btn" class="w-full py-2.5 px-4 bg-slate-800 text-red-400 hover:bg-red-950/20 font-medium rounded-lg flex items-center justify-center gap-2 transition-all text-sm">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Sign Out</span>
+      </button>
+    </div>
+
+    <!-- MAIN VIEW AREA -->
+    <main class="flex-1 flex flex-col overflow-y-auto min-w-0">
+      
+      <!-- TOP STATUS BAR -->
+      <div class="h-14 bg-white border-b border-slate-200 hidden md:flex items-center justify-between px-8 shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Active Workspace:</span>
+          <span class="text-xs bg-slate-100 text-slate-700 font-bold px-2.5 py-1 rounded-full border border-slate-200">Main Database</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-slate-600 text-xs font-medium">
+            <i class="fa-regular fa-calendar-check mr-1.5"></i>
+            <span id="current-date-lbl">Tuesday, 23 June 2026</span>
+          </div>
+          <span class="text-slate-300">|</span>
+          <button id="quick-add-btn" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-600 font-bold px-3 py-1.5 rounded-lg border border-brand-200/50 flex items-center gap-1.5 transition-all">
+            <i class="fa-solid fa-plus text-[10px]"></i>
+            <span>Add Lead</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- APP CONTENT PANELS -->
+      <div class="flex-1 p-4 md:p-8 space-y-6" id="panel-container">
+
+        <!-- ==================== DASHBOARD SECTION ==================== -->
+        <section id="section-dashboard" class="space-y-6 fade-in">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">System Dashboard</h2>
+              <p class="text-slate-500 text-sm mt-0.5">Real-time overview of database lead metrics</p>
+            </div>
+            <button class="bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 border border-slate-200 rounded-xl shadow-sm text-xs flex items-center gap-2 transition-all refresh-data-btn">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Refresh Metrics</span>
+            </button>
+          </div>
+
+          <!-- METRICS CARDS GRID -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Card: Total Leads -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center justify-between transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
+              <div class="space-y-1">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Total Leads</span>
+                <h3 class="text-3xl font-extrabold text-slate-900 cursor-pointer" onclick="navigateToTab('leads')" id="metric-total">--</h3>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-address-book"></i>
+              </div>
+            </div>
+            <!-- Card: New Leads -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center justify-between transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
+              <div class="space-y-1">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">New Leads</span>
+                <h3 class="text-3xl font-extrabold text-slate-900 cursor-pointer" onclick="navigateToTab('leads', 'New')" id="metric-new">--</h3>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-circle-plus"></i>
+              </div>
+            </div>
+            <!-- Card: Contacted Leads -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center justify-between transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
+              <div class="space-y-1">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Contacted</span>
+                <h3 class="text-3xl font-extrabold text-slate-900 cursor-pointer" onclick="navigateToTab('leads', 'Contacted')" id="metric-contacted">--</h3>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                <i class="fa-regular fa-comment-dots"></i>
+              </div>
+            </div>
+            <!-- Card: Converted Leads -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center justify-between transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
+              <div class="space-y-1">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Converted</span>
+                <h3 class="text-3xl font-extrabold text-slate-900 cursor-pointer" onclick="navigateToTab('leads', 'Converted')" id="metric-converted">--</h3>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-trophy"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- RECENT LEADS & CHARTS LAYOUT -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Recent Leads Table -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-2 flex flex-col">
+              <div class="flex items-center justify-between mb-5">
+                <div>
+                  <h4 class="font-extrabold text-slate-900 tracking-tight">Recent Lead Activity</h4>
+                  <p class="text-xs text-slate-500 mt-0.5">Most recently created prospects</p>
+                </div>
+                <button onclick="navigateToTab('leads')" class="text-xs text-brand-600 hover:text-brand-800 font-bold flex items-center gap-1">
+                  <span>View All Leads</span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+              
+              <div class="overflow-x-auto -mx-6">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50/70 border-y border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <th class="py-3 px-6">Name</th>
+                      <th class="py-3 px-4">Contact</th>
+                      <th class="py-3 px-4">Source</th>
+                      <th class="py-3 px-4">Status</th>
+                      <th class="py-3 px-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-recent-leads-tbody">
+                    <!-- Dynamic rows or skeleton here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Quick Conversion Chart Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
+              <h4 class="font-extrabold text-slate-900 tracking-tight mb-1">Conversion Overview</h4>
+              <p class="text-xs text-slate-500 mb-6">Percentage of converted prospects</p>
+              
+              <div class="flex-1 flex flex-col items-center justify-center space-y-4">
+                <!-- Circular gauge style or Apex Chart placeholder -->
+                <div id="dashboard-conversion-gauge" class="w-full flex items-center justify-center min-h-[200px]"></div>
+                
+                <div class="text-center w-full bg-slate-50 border border-slate-100 rounded-xl p-3 flex justify-around">
+                  <div>
+                    <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Converted</span>
+                    <span class="font-extrabold text-slate-800" id="gauge-lbl-converted">0</span>
+                  </div>
+                  <div class="border-r border-slate-200"></div>
+                  <div>
+                    <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Conversion Rate</span>
+                    <span class="font-extrabold text-brand-600" id="gauge-lbl-rate">0%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== LEADS SECTION ==================== -->
+        <section id="section-leads" class="space-y-6 hidden fade-in">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Leads Database</h2>
+              <p class="text-slate-500 text-sm mt-0.5">Manage, filter, and track pipeline contacts</p>
+            </div>
+            <button id="add-lead-btn" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4.5 py-2.5 rounded-xl shadow-lg shadow-brand-500/10 flex items-center gap-2 text-sm transition-all self-start sm:self-auto">
+              <i class="fa-solid fa-plus"></i>
+              <span>Create Lead</span>
+            </button>
+          </div>
+
+          <!-- FILTERS & CONTROLS -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-5 flex flex-col gap-4">
+            <!-- Top search & tab filters -->
+            <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
+              
+              <!-- Tab status selector -->
+              <div class="flex bg-slate-100 rounded-xl p-1 w-full lg:w-auto overflow-x-auto self-start">
+                <button data-status-filter="" class="status-tab px-4 py-2 rounded-lg font-bold text-xs whitespace-nowrap transition-all text-slate-600 active">All Leads</button>
+                <button data-status-filter="New" class="status-tab px-4 py-2 rounded-lg font-bold text-xs whitespace-nowrap transition-all text-slate-600">New</button>
+                <button data-status-filter="Contacted" class="status-tab px-4 py-2 rounded-lg font-bold text-xs whitespace-nowrap transition-all text-slate-600">Contacted</button>
+                <button data-status-filter="Converted" class="status-tab px-4 py-2 rounded-lg font-bold text-xs whitespace-nowrap transition-all text-slate-600">Converted</button>
+              </div>
+
+              <!-- Search Bar -->
+              <div class="relative w-full lg:w-80">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                  <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="search-input" class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-slate-800 transition-all" placeholder="Search name, company, notes...">
+                <button id="clear-search-btn" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 hidden">
+                  <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-100 pt-4 flex flex-wrap gap-4 items-center justify-between">
+              <!-- Advanced filters -->
+              <div class="flex flex-wrap gap-3">
+                <!-- Source Filter -->
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Source:</span>
+                  <select id="filter-source" class="bg-slate-50 border border-slate-200 rounded-xl text-xs px-3 py-2 font-medium focus:outline-none focus:ring-1 focus:ring-brand-500">
+                    <option value="">All Sources</option>
+                    <option value="Website">Website</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Referral">Referral</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <!-- Sorting -->
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sort by:</span>
+                  <select id="sort-select" class="bg-slate-50 border border-slate-200 rounded-xl text-xs px-3 py-2 font-medium focus:outline-none focus:ring-1 focus:ring-brand-500">
+                    <option value="date_desc">Newest First</option>
+                    <option value="date_asc">Oldest First</option>
+                    <option value="name_asc">Name (A-Z)</option>
+                    <option value="name_desc">Name (Z-A)</option>
+                    <option value="updated_desc">Recently Updated</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Reset Filters -->
+              <button id="reset-filters-btn" class="text-xs text-slate-500 hover:text-brand-600 font-bold flex items-center gap-1 py-1 transition-all">
+                <i class="fa-solid fa-filter-circle-xmark"></i>
+                <span>Reset Filters</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- LEADS TABLE CONTAINER -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/70 border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500">
+                    <th class="py-3.5 px-6">Name</th>
+                    <th class="py-3.5 px-4">Contact Info</th>
+                    <th class="py-3.5 px-4">Company</th>
+                    <th class="py-3.5 px-4">Source</th>
+                    <th class="py-3.5 px-4">Status</th>
+                    <th class="py-3.5 px-4">Created Date</th>
+                    <th class="py-3.5 px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="leads-table-tbody">
+                  <!-- Dynamic Lead Rows -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- PAGINATION BLOCK -->
+            <div class="border-t border-slate-100 px-6 py-4 flex items-center justify-between flex-col sm:flex-row gap-3">
+              <div class="text-xs text-slate-500 font-medium">
+                Showing <span id="pag-start-lbl" class="font-bold text-slate-800">0</span> to <span id="pag-end-lbl" class="font-bold text-slate-800">0</span> of <span id="pag-total-lbl" class="font-bold text-slate-800">0</span> records
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="prev-page-btn" class="p-2 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs font-semibold px-4 flex items-center gap-1">
+                  <i class="fa-solid fa-angle-left"></i>
+                  <span>Prev</span>
+                </button>
+                <div class="text-xs text-slate-600 font-bold px-3 py-1">
+                  Page <span id="pag-current-lbl">1</span> / <span id="pag-total-pages-lbl">1</span>
+                </div>
+                <button id="next-page-btn" class="p-2 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs font-semibold px-4 flex items-center gap-1">
+                  <span>Next</span>
+                  <i class="fa-solid fa-angle-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== ANALYTICS SECTION ==================== -->
+        <section id="section-analytics" class="space-y-6 hidden fade-in">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Analytics & Reports</h2>
+              <p class="text-slate-500 text-sm mt-0.5">Visualization of lead generation trends and conversion logs</p>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <button class="bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 border border-slate-200 rounded-xl shadow-sm text-xs flex items-center gap-2 transition-all refresh-data-btn">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span>Sync Data</span>
+              </button>
+              <button id="export-mock-btn" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-sm text-xs flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-download"></i>
+                <span>Export Report</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- SUMMARY GRID -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Pipeline</span>
+              <span class="text-2xl font-extrabold text-slate-900 block mt-1" id="an-total">0</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">New Leads</span>
+              <span class="text-2xl font-extrabold text-blue-600 block mt-1" id="an-new">0</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Contacted</span>
+              <span class="text-2xl font-extrabold text-amber-600 block mt-1" id="an-contacted">0</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Converted</span>
+              <span class="text-2xl font-extrabold text-emerald-600 block mt-1" id="an-converted">0</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Conversion Rate</span>
+              <span class="text-2xl font-extrabold text-brand-600 block mt-1" id="an-rate">0.0%</span>
+            </div>
+          </div>
+
+          <!-- CHARTS DRAWING GRID -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Chart 1: Registration over time -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
+              <h4 class="font-extrabold text-slate-900 tracking-tight mb-1">Monthly Acquisition</h4>
+              <p class="text-xs text-slate-500 mb-6">Leads generated per month</p>
+              <div id="chart-monthly-trend" class="min-h-[300px] flex items-center justify-center">
+                <!-- Loaded via ApexCharts -->
+              </div>
+            </div>
+
+            <!-- Chart 2: Leads by Status -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
+              <h4 class="font-extrabold text-slate-900 tracking-tight mb-1">Status Distribution</h4>
+              <p class="text-xs text-slate-500 mb-6">Pipeline stages count</p>
+              <div id="chart-leads-status" class="min-h-[300px] flex items-center justify-center">
+                <!-- Loaded via ApexCharts -->
+              </div>
+            </div>
+
+            <!-- Chart 3: Leads by Source -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-2 flex flex-col">
+              <h4 class="font-extrabold text-slate-900 tracking-tight mb-1">Acquisition Channels</h4>
+              <p class="text-xs text-slate-500 mb-6">Where leads originated from</p>
+              <div id="chart-leads-source" class="min-h-[320px] flex items-center justify-center">
+                <!-- Loaded via ApexCharts -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== SETTINGS SECTION ==================== -->
+        <section id="section-settings" class="space-y-6 hidden fade-in">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">System Settings & Integration</h2>
+            <p class="text-slate-500 text-sm mt-0.5">Change security options and connect public form endpoints</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            
+            <!-- Change Password Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5 lg:col-span-1">
+              <div>
+                <h4 class="font-extrabold text-slate-900 tracking-tight">Change Password</h4>
+                <p class="text-xs text-slate-500 mt-0.5">Update credentials for authentication</p>
+              </div>
+
+              <form id="change-pw-form" class="space-y-4">
+                <div>
+                  <label for="old-password" class="block text-xs font-semibold text-slate-600 mb-1.5">Current Password</label>
+                  <input type="password" id="old-password" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs" placeholder="••••••••">
+                </div>
+                <div>
+                  <label for="new-password" class="block text-xs font-semibold text-slate-600 mb-1.5">New Password</label>
+                  <input type="password" id="new-password" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs" placeholder="••••••••">
+                </div>
+                <div>
+                  <label for="confirm-password" class="block text-xs font-semibold text-slate-600 mb-1.5">Confirm New Password</label>
+                  <input type="password" id="confirm-password" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs" placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl text-xs transition-all shadow-md shadow-brand-500/10">
+                  Update Security Password
+                </button>
+              </form>
+            </div>
+
+            <!-- Public API Integration Guide -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5 lg:col-span-2">
+              <div>
+                <h4 class="font-extrabold text-slate-900 tracking-tight">API Contact Form Integration</h4>
+                <p class="text-xs text-slate-500 mt-0.5">Embed public endpoint scripts in external HTML templates</p>
+              </div>
+
+              <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3.5">
+                <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 font-extrabold rounded-md uppercase tracking-wider text-[10px]">POST</span>
+                    <code class="font-bold text-slate-700" id="api-endpoint-url">http://127.0.0.1:5000/api/leads</code>
+                  </div>
+                  <button id="copy-endpoint-btn" class="text-[10px] text-brand-600 hover:text-brand-800 font-bold">
+                    <i class="fa-solid fa-copy mr-1"></i>Copy URI
+                  </button>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                  You can capture leads automatically from contact forms on any website. Send form data as a JSON payload to this endpoint. The lead will instantly propagate with status <strong>New</strong> and source <strong>Website</strong>.
+                </p>
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Example Integration Code (HTML/JS)</h5>
+                  <button id="copy-snippet-btn" class="text-xs text-brand-600 hover:text-brand-800 font-bold">
+                    <i class="fa-solid fa-copy mr-1"></i>Copy Snippet
+                  </button>
+                </div>
+                <pre class="bg-slate-900 text-slate-300 text-[10px] font-mono p-4 rounded-xl overflow-x-auto max-h-60 leading-relaxed select-all" id="integration-snippet">
+&lt;!-- Simple HTML Form --&gt;
+&lt;form id="contactForm"&gt;
+  &lt;input type="text" name="name" placeholder="Full Name" required /&gt;
+  &lt;input type="email" name="email" placeholder="Email Address" required /&gt;
+  &lt;input type="text" name="phone" placeholder="Phone Number" /&gt;
+  &lt;input type="text" name="company" placeholder="Company Name" /&gt;
+  &lt;textarea name="message" placeholder="Your Message"&gt;&lt;/textarea&gt;
+  &lt;button type="submit"&gt;Send Message&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;!-- Javascript Handler --&gt;
+&lt;script&gt;
+document.getElementById('contactForm').addEventListener('submit', async (e) =&gt; {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const data = {
+    name: formData.get('name'),
+    email: formData.get('email'),
+    phone: formData.get('phone') || '',
+    company: formData.get('company') || '',
+    source: 'Website', // Or 'Facebook', 'LinkedIn', etc.
+    message: formData.get('message') || ''
+  };
+
+  try {
+    const res = await fetch('YOUR_BACKEND_URL/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    alert('Lead captured successfully!');
+  } catch (err) {
+    console.error('Submission failed', err);
+  }
+});
+&lt;/script&gt;</pre>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== LEAD ADD/EDIT MODAL ==================== -->
+  <div id="lead-modal" class="fixed inset-0 bg-slate-950/60 z-40 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col max-h-[90vh] overflow-y-auto fade-in">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 id="modal-title" class="text-lg font-bold text-slate-900">Create New CRM Lead</h3>
+        <button id="modal-close-btn" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="lead-form" class="space-y-4 mt-6">
+        <input type="hidden" id="lead-form-id">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="lead-name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Full Name *</label>
+            <input type="text" id="lead-name" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs text-slate-800 transition-all">
+          </div>
+          <div>
+            <label for="lead-email" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email Address *</label>
+            <input type="email" id="lead-email" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs text-slate-800 transition-all">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="lead-phone" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Phone Number</label>
+            <input type="tel" id="lead-phone" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs text-slate-800 transition-all" placeholder="e.g. +1 555-1234">
+          </div>
+          <div>
+            <label for="lead-company" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Company Name</label>
+            <input type="text" id="lead-company" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs text-slate-800 transition-all" placeholder="e.g. Acme Corp">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="lead-source" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Lead Source</label>
+            <select id="lead-source" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs text-slate-800 transition-all font-semibold">
+              <option value="Website">Website</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Instagram">Instagram</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Referral">Referral</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="lead-status" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Pipeline Status</label>
+            <select id="lead-status" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs text-slate-800 transition-all font-semibold">
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Converted">Converted</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="initial-note-container">
+          <label for="lead-initial-note" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Initial Follow-up Note</label>
+          <textarea id="lead-initial-note" rows="2" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs text-slate-800 transition-all" placeholder="Optional. e.g. Met client at networking event, sent initial pricing..."></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
+          <button type="button" id="modal-cancel-btn" class="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-xs transition-all">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all shadow-md shadow-brand-500/10">
+            <span id="modal-submit-lbl">Create Lead</span>
+            <div id="modal-spinner" class="loader-spinner !w-3 !h-3 !border-white !border-t-transparent hidden"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== LEAD DETAILS PANEL (SLIDE-OVER) ==================== -->
+  <div id="lead-details-overlay" class="fixed inset-0 bg-slate-950/60 z-35 hidden"></div>
+  <div id="lead-details-panel" class="fixed inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl z-40 slide-over flex flex-col">
+    
+    <!-- Panel Header -->
+    <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100 bg-slate-50 shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="text-xs uppercase font-extrabold tracking-widest text-slate-400">Lead Registry Detail</span>
+      </div>
+      <button id="panel-close-btn" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all">
+        <i class="fa-solid fa-arrow-right-to-bracket text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Panel Content scrollable -->
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+      
+      <!-- Lead Summary Header -->
+      <div class="flex items-start justify-between border-b border-slate-100 pb-5">
+        <div class="space-y-1">
+          <h3 id="det-name" class="text-xl font-extrabold text-slate-900 tracking-tight">Lead Name</h3>
+          <p id="det-company" class="text-sm font-semibold text-slate-400">Company Name</p>
+        </div>
+        <!-- Status controller -->
+        <div class="flex flex-col items-end gap-1.5">
+          <select id="det-status-select" class="bg-slate-50 border border-slate-200 rounded-xl text-xs px-3 py-1.5 font-bold focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer">
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Converted">Converted</option>
+          </select>
+          <span id="det-source-badge" class="px-2 py-0.5 bg-slate-100 border border-slate-200 text-[10px] text-slate-600 font-bold rounded">Website</span>
+        </div>
+      </div>
+
+      <!-- Core Details Block -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs">
+        <div>
+          <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Email Contact</span>
+          <a href="#" id="det-email" class="font-bold text-brand-600 hover:underline">email@domain.com</a>
+        </div>
+        <div>
+          <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Phone Number</span>
+          <span id="det-phone" class="font-bold text-slate-800">--</span>
+        </div>
+        <div>
+          <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date Created</span>
+          <span id="det-created" class="font-bold text-slate-700">--</span>
+        </div>
+        <div>
+          <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Last Updated</span>
+          <span id="det-updated" class="font-bold text-slate-700">--</span>
+        </div>
+      </div>
+
+      <!-- Action Panel Buttons -->
+      <div class="flex items-center gap-3 border-b border-slate-100 pb-6">
+        <button id="det-edit-btn" class="flex-1 py-2 px-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all">
+          <i class="fa-solid fa-pen-to-square"></i>
+          <span>Edit Lead Details</span>
+        </button>
+        <button id="det-delete-btn" class="py-2 px-4 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 text-red-600 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all">
+          <i class="fa-solid fa-trash"></i>
+          <span>Delete Lead</span>
+        </button>
+      </div>
+
+      <!-- NOTES SECTION -->
+      <div class="space-y-4">
+        <h4 class="font-extrabold text-slate-900 tracking-tight text-sm flex items-center justify-between">
+          <span>Notes & Follow-up Timeline</span>
+          <span class="text-xs text-slate-400 font-medium" id="det-notes-count">0 Notes</span>
+        </h4>
+
+        <!-- Add Note Box -->
+        <form id="add-note-form" class="space-y-2">
+          <textarea id="note-input" required rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 transition-all" placeholder="Enter follow-up details (e.g. Called client, scheduled callback next week...)"></textarea>
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] text-slate-400 italic">Press enter or submit to save.</span>
+            <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs flex items-center gap-1 transition-all">
+              <span>Save Note</span>
+              <div id="note-submit-spinner" class="loader-spinner !w-3 !h-3 !border-white !border-t-transparent hidden"></div>
+            </button>
+          </div>
+        </form>
+
+        <!-- Edit Note Sub-Box (Initially Hidden) -->
+        <div id="edit-note-box" class="bg-amber-50/70 border border-amber-100 rounded-xl p-3 space-y-2 hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] text-amber-700 font-bold uppercase tracking-wider"><i class="fa-solid fa-pen mr-1"></i>Edit Note Text</span>
+            <button id="edit-note-cancel" class="text-xs text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <input type="hidden" id="edit-note-id">
+          <textarea id="edit-note-input" rows="2" class="w-full px-3 py-2 border border-amber-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-slate-800 transition-all"></textarea>
+          <button id="edit-note-save-btn" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-[10px] transition-all">
+            Save Changes
+          </button>
+        </div>
+
+        <!-- Notes Timeline list -->
+        <div id="notes-timeline" class="relative pl-10 space-y-5 timeline-line">
+          <!-- Dynamic Timeline Notes -->
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== DELETE CONFIRMATION MODAL ==================== -->
+  <div id="delete-confirm-modal" class="fixed inset-0 bg-slate-950/60 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center space-y-5 fade-in">
+      <div class="w-14 h-14 rounded-full bg-red-50 text-red-600 flex items-center justify-center text-2xl mx-auto border border-red-100">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      
+      <div>
+        <h3 class="font-extrabold text-slate-900 text-lg">Confirm Action</h3>
+        <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+          Are you sure you want to permanently delete lead <strong id="delete-lead-name" class="text-slate-800">John Doe</strong>? This action cannot be undone.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <button id="delete-cancel-btn" class="flex-1 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-xs transition-all">
+          Cancel
+        </button>
+        <button id="delete-confirm-btn" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-red-500/10">
+          <span>Delete Lead</span>
+          <div id="delete-spinner" class="loader-spinner !w-3 !h-3 !border-white !border-t-transparent hidden"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SCRIPTS ==================== -->
+  <!-- ApexCharts CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <!-- Main Application Script -->
+  <script src="js/app.js"></script>
+</body>
+</html>
