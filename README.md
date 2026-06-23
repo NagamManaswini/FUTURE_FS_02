@@ -34,11 +34,17 @@ A lightweight, responsive, full-stack Customer Relationship Management (CRM) app
 
    # Activate your virtual environment (Windows PowerShell)
    .\.venv\Scripts\Activate.ps1
+   
    Install dependencies:
+
    pip install -r backend/requirements.txt
+   
    Environment Variables (Optional):
+   
    Create a .env file in the project root to override default configuration parameters if necessary:
+   
    Code snippet
+   
    PORT=5000
    MONGO_URI=mongodb://localhost:27017/mini_crm
    JWT_SECRET=your_secret_key
