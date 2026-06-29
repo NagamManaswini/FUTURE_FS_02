@@ -546,7 +546,7 @@ async function fetchRecentLeadsForDashboard() {
   const tbody = document.getElementById('dashboard-recent-leads-tbody');
   tbody.innerHTML = `
     <tr>
-      <td colspan="5" class="py-6 text-center text-slate-400">
+      <td colspan="6" class="py-6 text-center text-slate-400">
         <div class="flex justify-center items-center gap-2">
           <div class="loader-spinner !w-5 !h-5 border-t-transparent border-slate-300"></div>
           <span>Loading recent prospects...</span>
@@ -570,7 +570,7 @@ async function fetchRecentLeadsForDashboard() {
     if (result.leads.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="5" class="py-8 text-center text-slate-400 text-xs font-medium">
+          <td colspan="6" class="py-8 text-center text-slate-400 text-xs font-medium">
             No leads in the database. Add a lead to get started!
           </td>
         </tr>`;
@@ -609,7 +609,7 @@ async function fetchRecentLeadsForDashboard() {
         </td>
         <td class="py-3.5 px-6 text-right">
           <button class="action-btn w-7 h-7 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 rounded-lg text-slate-500 transition-all" onclick="viewLeadDetails('${lead.id}')">
-            <i class="fa-regular fa-folder-open"></i>
+            <i class="fa-solid fa-folder-open"></i>
           </button>
         </td>
       `;
@@ -619,7 +619,7 @@ async function fetchRecentLeadsForDashboard() {
   } catch (err) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="py-8 text-center text-red-500 text-xs font-bold">
+        <td colspan="6" class="py-8 text-center text-red-500 text-xs font-bold">
           Error loading recent activity.
         </td>
       </tr>`;

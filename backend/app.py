@@ -8,7 +8,7 @@ from backend.routes.leads import leads_bp
 from backend.routes.analytics import analytics_bp
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='../frontend', static_url_path='')
     app.config.from_object(Config)
     
     # Enable CORS for all routes (important for separate frontend/backend deployment)
@@ -20,6 +20,10 @@ def create_app():
     
     @app.route('/')
     def index():
+        return app.send_static_file('index.html')
+        
+    @app.route('/api/health')
+    def health():
         return jsonify({
             'status': 'healthy',
             'service': 'Mini CRM API',
